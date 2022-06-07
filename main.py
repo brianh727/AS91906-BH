@@ -20,7 +20,17 @@ class Main(QMainWindow):
 
 class Start(QWidget):
     def __init__(self):
-        pass
+        super().__init__()
+        self.start_layout = QVBoxLayout()
+        self.setLayout(self.start_layout)
+        
+        self.login_button = QPushButton("Login")
+        self.signup_button = QPushButton("Sign Up")
+        self.guest_button = QPushButton("Guest Login")
+
+        self.start_layout.addWidget(self.login_button)
+        self.start_layout.addWidget(self.signup_button)
+        self.start_layout.addWidget(self.guest_button)
 
 
 def main():
