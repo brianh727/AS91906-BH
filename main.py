@@ -27,6 +27,11 @@ class Main(QMainWindow):
         self.widgets.addWidget(self.login_widget)
         self.widgets.setCurrentWidget(self.login_widget)
 
+    def signup_menu(self):
+        self.signup_widget = Signup(self)
+        self.widgets.addWidget(self.signup_widget)
+        self.widgets.setCurrentWidget(self.signup_widget)
+
 
 class Start(QWidget):
     """Start menu for the login buttons"""
@@ -44,6 +49,7 @@ class Start(QWidget):
         self.start_layout.addWidget(self.guest_button)
 
         self.login_button.clicked.connect(self.parent().login_menu)
+        self.signup_button.clicked.connect(self.parent().signup_menu)
         
 
 class Login(QWidget):
@@ -74,6 +80,40 @@ class Login(QWidget):
         self.buttons_layout.addWidget(self.return_button)
 
     def login_check(self):
+        pass
+
+
+class Signup(QWidget):
+    """Signup menu for user to create an account"""
+    def __init__(self, parent=None):
+        super(Signup, self).__init__(parent)
+        self.signup_layout = QVBoxLayout()
+        self.setLayout(self.signup_layout)
+
+        self.title = QLabel("Create a new account:")
+        self.user_line = QLineEdit()
+        self.user_line.setPlaceholderText("Username")
+        self.pass_line = QLineEdit()
+        self.pass_line.setPlaceholderText("Password")
+        self.pass_confirm_line = QLineEdit()
+        self.pass_confirm_line.setPlaceholderText("Confirm Password")
+        self.signup_button = QPushButton("Signup")
+        self.return_button = QPushButton("Return")
+
+        self.signup_button.clicked.connect(self.signup_check)
+        self.return_button.clicked.connect(self.parent().main_menu)
+
+        self.signup_layout.addWidget(self.title)
+        self.signup_layout.addWidget(self.user_line)
+        self.signup_layout.addWidget(self.pass_line)
+        self.signup_layout.addWidget(self.pass_confirm_line)
+
+        self.buttons_layout = QHBoxLayout()
+        self.signup_layout.addLayout(self.buttons_layout)
+        self.buttons_layout.addWidget(self.signup_button)
+        self.buttons_layout.addWidget(self.return_button)
+
+    def signup_check(self):
         pass
 
 
