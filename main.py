@@ -1,4 +1,6 @@
 import sys
+import re
+import sqlite3
 
 from PyQt5.QtCore import Qt, QFile
 from PyQt5.QtGui import QIcon
@@ -80,6 +82,7 @@ class Login(QWidget):
         self.buttons_layout.addWidget(self.return_button)
 
     def login_check(self):
+        """Check that the login details match those in the database"""
         pass
 
 
@@ -95,8 +98,11 @@ class Signup(QWidget):
         self.user_line.setPlaceholderText("Username")
         self.pass_line = QLineEdit()
         self.pass_line.setPlaceholderText("Password")
+        self.pass_line.setEchoMode(QLineEdit.Password)
         self.pass_confirm_line = QLineEdit()
         self.pass_confirm_line.setPlaceholderText("Confirm Password")
+        self.pass_confirm_line.setEchoMode(QLineEdit.Password)
+        self.confirm_text = QLabel("")
         self.signup_button = QPushButton("Signup")
         self.return_button = QPushButton("Return")
 
@@ -107,6 +113,7 @@ class Signup(QWidget):
         self.signup_layout.addWidget(self.user_line)
         self.signup_layout.addWidget(self.pass_line)
         self.signup_layout.addWidget(self.pass_confirm_line)
+        self.signup_layout.addWidget(self.confirm_text)
 
         self.buttons_layout = QHBoxLayout()
         self.signup_layout.addLayout(self.buttons_layout)
@@ -114,15 +121,24 @@ class Signup(QWidget):
         self.buttons_layout.addWidget(self.return_button)
 
     def signup_check(self):
-        pass
+        if not 3 <= len(self.user_line.text()) <= 16:
+            self.confirm_text.setText("Username must be between "
+                                      "3 and 16 characters long")
+        elif not 4 <= len(self.pass_line.text()) <= 20:
+            self.confirm_text.setText("Password must be between "
+                                      "4 and 20 characters long")
+        elif self.pass_line.text() != self.pass_confirm_line.text():
+            self.confirm_text.setText("Passwords do not match")
 
 
 def main():
+    con = sqlite3.connect("accounts.db")
     """Opens the main window"""
     application = QApplication(sys.argv)
     window = Main()
     window.show()
     sys.exit(application.exec_())
+
 
 if __name__ == "__main__":
     main()
