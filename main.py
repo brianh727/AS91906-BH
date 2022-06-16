@@ -4,10 +4,10 @@ import sqlite3
 
 from PyQt5.QtCore import Qt, QFile
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QAction, QApplication, QHBoxLayout, QLabel, 
+from PyQt5.QtWidgets import (QAction, QApplication, QHBoxLayout, QLabel,
                              QMainWindow, QToolBar, QVBoxLayout, QWidget,
                              QTabWidget, QTableWidget, QAbstractItemView,
-                             QPushButton, QGridLayout, QLineEdit, QStackedWidget)
+                             QPushButton, QLineEdit, QStackedWidget)
 
 
 class Main(QMainWindow):
@@ -23,7 +23,7 @@ class Main(QMainWindow):
 
     def main_menu(self):
         self.widgets.setCurrentWidget(self.start_widget)
-    
+
     def login_menu(self):
         self.login_widget = Login(self)
         self.widgets.addWidget(self.login_widget)
@@ -34,6 +34,11 @@ class Main(QMainWindow):
         self.widgets.addWidget(self.signup_widget)
         self.widgets.setCurrentWidget(self.signup_widget)
 
+    def flash_menu(self):
+        self.flash_main_widget = Flash_Main(self)
+        self.widgets.addWidget(self.flash_main_widget)
+        self.widgets.setCurrentWidget(self.flash_main_widget)
+
 
 class Start(QWidget):
     """Start menu for the login buttons"""
@@ -41,7 +46,7 @@ class Start(QWidget):
         super(Start, self).__init__(parent)
         self.start_layout = QVBoxLayout()
         self.setLayout(self.start_layout)
-        
+
         self.login_button = QPushButton("Login")
         self.signup_button = QPushButton("Sign Up")
         self.guest_button = QPushButton("Guest Login")
@@ -52,7 +57,8 @@ class Start(QWidget):
 
         self.login_button.clicked.connect(self.parent().login_menu)
         self.signup_button.clicked.connect(self.parent().signup_menu)
-        
+        self.guest_button.clicked.connect(self.parent().flash_menu)
+
 
 class Login(QWidget):
     """Login menu for the user to log in to an existing account"""
@@ -83,13 +89,17 @@ class Login(QWidget):
 
     def login_check(self):
         """Check that the login details match those in the database"""
-        pass
+        if 1 == 2:
+            pass
+        else:
+            self.parent().parent().flash_menu()
 
 
 class Signup(QWidget):
     """Signup menu for user to create an account"""
     def __init__(self, parent=None):
         super(Signup, self).__init__(parent)
+        print(self.parent())
         self.signup_layout = QVBoxLayout()
         self.setLayout(self.signup_layout)
 
@@ -124,11 +134,25 @@ class Signup(QWidget):
         if not 3 <= len(self.user_line.text()) <= 16:
             self.confirm_text.setText("Username must be between "
                                       "3 and 16 characters long")
-        elif not 4 <= len(self.pass_line.text()) <= 20:
+        elif not 8 <= len(self.pass_line.text()) <= 24:
             self.confirm_text.setText("Password must be between "
-                                      "4 and 20 characters long")
+                                      "8 and 24 characters long")
+        elif not re.search("(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}",
+                           self.pass_line.text()):
+            self.confirm_text.setText("Password does not meet "
+                                      "the requirements")
         elif self.pass_line.text() != self.pass_confirm_line.text():
             self.confirm_text.setText("Passwords do not match")
+        else:
+            self.parent().parent().flash_menu()
+
+
+class Flash_Main(QWidget):
+    """The main menu to access the flashcards"""
+    def __init__(self, parent=None):
+        super(Flash_Main, self).__init__(parent)
+        self.flash_layout = QVBoxLayout()
+        self.setLayout(self.flash_layout)
 
 
 def main():
