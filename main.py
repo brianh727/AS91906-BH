@@ -4,10 +4,10 @@ import sqlite3
 
 from PyQt5.QtCore import Qt, QFile
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QAction, QApplication, QHBoxLayout, QLabel,
-                             QMainWindow, QToolBar, QVBoxLayout, QWidget,
-                             QTabWidget, QTableWidget, QAbstractItemView,
-                             QPushButton, QLineEdit, QStackedWidget)
+from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel,
+                             QMainWindow, QVBoxLayout, QWidget,
+                             QTabWidget, QTableWidget, QPushButton,
+                             QLineEdit, QStackedWidget)
 
 
 class Main(QMainWindow):
@@ -47,10 +47,12 @@ class Start(QWidget):
         self.start_layout = QVBoxLayout()
         self.setLayout(self.start_layout)
 
+        self.title_label = QLabel("FastCards by Brian Huang")
         self.login_button = QPushButton("Login")
         self.signup_button = QPushButton("Sign Up")
         self.guest_button = QPushButton("Guest Login")
 
+        self.start_layout.addWidget(self.title_label)
         self.start_layout.addWidget(self.login_button)
         self.start_layout.addWidget(self.signup_button)
         self.start_layout.addWidget(self.guest_button)
@@ -153,6 +155,18 @@ class Flash_Main(QWidget):
         super(Flash_Main, self).__init__(parent)
         self.flash_layout = QVBoxLayout()
         self.setLayout(self.flash_layout)
+        
+        self.title = QLabel("FastCards")
+        self.test_button = QPushButton("Test flashcards")
+        self.edit_button = QPushButton("Edit flashcards")
+        self.create_button = QPushButton("Create flashcards")
+        self.exit_button = QPushButton("Sign out and exit")
+
+        self.flash_layout.addWidget(self.title)
+        self.flash_layout.addWidget(self.test_button)
+        self.flash_layout.addWidget(self.edit_button)
+        self.flash_layout.addWidget(self.create_button)
+        self.flash_layout.addWidget(self.exit_button)
 
 
 def main():
