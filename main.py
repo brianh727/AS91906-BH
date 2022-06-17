@@ -38,6 +38,10 @@ class Main(QMainWindow):
         self.flash_main_widget = Flash_Main(self)
         self.widgets.addWidget(self.flash_main_widget)
         self.widgets.setCurrentWidget(self.flash_main_widget)
+    
+    def test_menu(self):
+        self.flash_test_widget = Flash_Test()
+        self.flash_test_widget.show()
 
 
 class Start(QWidget):
@@ -168,9 +172,23 @@ class Flash_Main(QWidget):
         self.flash_layout.addWidget(self.create_button)
         self.flash_layout.addWidget(self.exit_button)
 
+        self.test_button.clicked.connect(self.parent().test_menu)
+        self.exit_button.clicked.connect(sys.exit)
+
+
+class Flash_Test(QWidget):
+    """A new window which tests the flashcards"""
+    def __init__(self):
+        super().__init__()
+        self.test_layout = QVBoxLayout()
+        self.setLayout(self.test_layout)
+        
+        self.title = QLabel("Testing")
+        self.test_layout.addWidget(self.title)
+        
+
 
 def main():
-    con = sqlite3.connect("accounts.db")
     """Opens the main window"""
     application = QApplication(sys.argv)
     window = Main()
