@@ -105,7 +105,6 @@ class Signup(QWidget):
     """Signup menu for user to create an account"""
     def __init__(self, parent=None):
         super(Signup, self).__init__(parent)
-        print(self.parent())
         self.signup_layout = QVBoxLayout()
         self.setLayout(self.signup_layout)
 
