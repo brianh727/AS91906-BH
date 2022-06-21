@@ -1,6 +1,7 @@
 import sys
 import re
 import sqlite3
+import os.path
 
 from PyQt5.QtCore import Qt, QFile
 from PyQt5.QtGui import QIcon
@@ -184,39 +185,53 @@ class Flash_Test(QWidget):
         
         self.title = QLabel("Testing")
         self.test_layout.addWidget(self.title)
-        
+
+acc_db = r"accounts.db"
+flash_db = r"flashcards.db"
+
+acc_table = """CREATE TABLE IF NOT EXISTS accounts (
+                   id integer PRIMARY KEY,
+                   username text NOT NULL,
+                   password text NOT NULL);"""
+
+flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
+                     id integer PRIMARY KEY,
+                     frontside text NOT NULL,
+                     backside text NOT NULL);"""
+
+def create_table(con, tab):
+    try:
+        cur = con.cursor()
+        cur.execute(tab)
+    except Error as er:
+        print(er)
+
+def create_con(db):
+    con = None
+    try:
+        con = sqlite3.connect(db)
+        return con
+    except Error as er:
+        print(er)
+    return con
 
 def main():
-    """Opens the main window"""
+    """Opens the main window and creates databases"""
+    acc_con = create_con(acc_db)
+    if acc_con is not None:
+        create_table(acc_con, acc_table)
+    else:
+        print("Couldn't create acc connection")
+    flash_con = create_con(flash_db)
+    if flash_con is not None:
+        create_table(flash_con, flash_table)
+    else:
+        print("Couldn't create flash connection")
+
     application = QApplication(sys.argv)
     window = Main()
     window.show()
     sys.exit(application.exec_())
 
-def create_database():
-    acc_data = r"accounts.db"
-    flash_data = r"flashcards.db"
-    
-    acc_table = """CREATE TABLE IF NOT EXISTS accounts (
-                   id integer PRIMARY KEY,
-                   username text NOT NULL,
-                   password text NOT NULL );"""
-
-    flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
-                     id integer PRIMARY KEY,
-                     frontside text NOT NULL,
-                     backside text NOT NULL );"""
-
-    acc_con = sqlite3.connect(acc_data)
-    if acc_con is not None:
-        acc_cur = acc_con.cursor()
-        acc_cur.execute(acc_table)
-
-    flash_con = sqlite3.connect(flash_data)
-    if flash_con is not None:
-        flash_cur = flash_con.cursor()
-        flash_cur.execute(flash_table)
-
 if __name__ == "__main__":
-    create_database()
     main()
