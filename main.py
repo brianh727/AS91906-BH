@@ -99,13 +99,13 @@ class Login(QWidget):
     def login_check(self):
         """Check that the login details match those in the database"""
         acc = (self.user_line.text().lower(), self.pass_line.text())
-        print(acc[0])
         acc_con = create_con(acc_db)
         acc_cur = acc_con.cursor()
-        acc_cur.execute("select * FROM accounts where "
-                        "username = ?", (acc[0],))
-        print(acc_cur.rowcount)
-        if acc_cur.rowcount != 1:
+        acc_cur.execute("select exists(select 1 "
+                        "from accounts where username = ?)", [acc[0]])
+        [exists_acc] = acc_cur.fetchone()
+        print(exists_acc)
+        if not exists_acc:
             self.error_message.setText("Username does not exist")
         else:
             self.parent().parent().flash_menu()
@@ -147,12 +147,15 @@ class Signup(QWidget):
 
     def signup_check(self):
         acc = (self.user_line.text().lower(), self.pass_line.text())
-        acc_c = create_con(acc_db)
-        acc_c.execute(f"SELECT 1 FROM accounts where username = {(acc[0])}")
+        acc_con = create_con(acc_db)
+        acc_cur = acc_con.cursor()
+        acc_cur.execute("select exists(select 1 "
+                        "from accounts where username = ?)", [acc[0]])
+        [exists_acc] = acc_cur.fetchone()
         if not 3 <= len(self.user_line.text()) <= 16:
             self.confirm_text.setText("Username must be between "
                                       "3 and 16 characters long")
-        elif acc_c.rowcount:
+        elif exists_acc:
             self.confirm_text.setText("Username already exists")
         elif not 8 <= len(self.pass_line.text()) <= 24:
             self.confirm_text.setText("Password must be between "
@@ -164,7 +167,7 @@ class Signup(QWidget):
         elif self.pass_line.text() != self.pass_confirm_line.text():
             self.confirm_text.setText("Passwords do not match")
         else:
-            insert_account(acc_c, account)
+            insert_account(acc_con, acc)
             self.parent().parent().flash_menu()
 
 
