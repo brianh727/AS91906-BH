@@ -79,6 +79,7 @@ class Login(QWidget):
         self.user_line.setPlaceholderText("Username")
         self.pass_line = QLineEdit()
         self.pass_line.setPlaceholderText("Password")
+        self.error_message = QLabel("")
         self.login_button = QPushButton("Login")
         self.return_button = QPushButton("Return")
 
@@ -88,6 +89,7 @@ class Login(QWidget):
         self.login_layout.addWidget(self.title)
         self.login_layout.addWidget(self.user_line)
         self.login_layout.addWidget(self.pass_line)
+        self.login_layout.addWidget(self.error_message)
 
         self.buttons_layout = QHBoxLayout()
         self.login_layout.addLayout(self.buttons_layout)
@@ -96,8 +98,15 @@ class Login(QWidget):
 
     def login_check(self):
         """Check that the login details match those in the database"""
-        if 1 == 2:
-            pass
+        acc = (self.user_line.text().lower(), self.pass_line.text())
+        print(acc[0])
+        acc_con = create_con(acc_db)
+        acc_cur = acc_con.cursor()
+        acc_cur.execute("select * FROM accounts where "
+                        "username = ?", (acc[0],))
+        print(acc_cur.rowcount)
+        if acc_cur.rowcount != 1:
+            self.error_message.setText("Username does not exist")
         else:
             self.parent().parent().flash_menu()
 
@@ -137,9 +146,14 @@ class Signup(QWidget):
         self.buttons_layout.addWidget(self.return_button)
 
     def signup_check(self):
+        acc = (self.user_line.text().lower(), self.pass_line.text())
+        acc_c = create_con(acc_db)
+        acc_c.execute(f"SELECT 1 FROM accounts where username = {(acc[0])}")
         if not 3 <= len(self.user_line.text()) <= 16:
             self.confirm_text.setText("Username must be between "
                                       "3 and 16 characters long")
+        elif acc_c.rowcount:
+            self.confirm_text.setText("Username already exists")
         elif not 8 <= len(self.pass_line.text()) <= 24:
             self.confirm_text.setText("Password must be between "
                                       "8 and 24 characters long")
@@ -150,6 +164,7 @@ class Signup(QWidget):
         elif self.pass_line.text() != self.pass_confirm_line.text():
             self.confirm_text.setText("Passwords do not match")
         else:
+            insert_account(acc_c, account)
             self.parent().parent().flash_menu()
 
 
@@ -199,6 +214,12 @@ flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
                      frontside text NOT NULL,
                      backside text NOT NULL);"""
 
+def insert_account(con, acc):
+    sql = "INSERT INTO accounts(username, password) VALUES(?,?)"
+    cur = con.cursor()
+    cur.execute(sql, acc)
+    con.commit()
+
 def create_table(con, tab):
     try:
         cur = con.cursor()
@@ -222,6 +243,7 @@ def main():
         create_table(acc_con, acc_table)
     else:
         print("Couldn't create acc connection")
+
     flash_con = create_con(flash_db)
     if flash_con is not None:
         create_table(flash_con, flash_table)
