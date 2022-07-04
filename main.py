@@ -44,6 +44,9 @@ class Main(QMainWindow):
         self.flash_test_widget = Flash_Test()
         self.flash_test_widget.show()
 
+    def disable_window(self):
+        pass
+
 
 class Start(QWidget):
     """Start menu for the login buttons"""
@@ -79,6 +82,7 @@ class Login(QWidget):
         self.user_line.setPlaceholderText("Username")
         self.pass_line = QLineEdit()
         self.pass_line.setPlaceholderText("Password")
+        self.pass_line.setEchoMode(QLineEdit.Password)
         self.error_message = QLabel("")
         self.login_button = QPushButton("Login")
         self.return_button = QPushButton("Return")
@@ -103,11 +107,15 @@ class Login(QWidget):
         acc_cur = acc_con.cursor()
         acc_cur.execute("select exists(select 1 "
                         "from accounts where username = ?)", [acc[0]])
-        [exists_acc] = acc_cur.fetchone()
-        print(exists_acc)
-        if not exists_acc:
+        [exists_user] = acc_cur.fetchone()
+
+        acc_cur.execute("select 1 from accounts where username = ?"
+                        "and password = ?", acc)
+        if not exists_user:
             self.error_message.setText("Username does not exist")
-        else:
+        elif not acc_cur.fetchone():
+            self.error_message.setText("Password is incorrect")
+        else:            
             self.parent().parent().flash_menu()
 
 
