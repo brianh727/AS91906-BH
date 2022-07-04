@@ -23,28 +23,34 @@ class Main(QMainWindow):
         self.setCentralWidget(self.widgets)
 
     def main_menu(self):
+        """Switch to the first start main menu"""
         self.widgets.setCurrentWidget(self.start_widget)
 
     def login_menu(self):
+        """Switch to the login menu"""
         self.login_widget = Login(self)
         self.widgets.addWidget(self.login_widget)
         self.widgets.setCurrentWidget(self.login_widget)
 
     def signup_menu(self):
+        """Switch to the signup menu"""
         self.signup_widget = Signup(self)
         self.widgets.addWidget(self.signup_widget)
         self.widgets.setCurrentWidget(self.signup_widget)
 
     def flash_menu(self):
+        """Switch to the flashcards menu"""
         self.flash_main_widget = Flash_Main(self)
         self.widgets.addWidget(self.flash_main_widget)
         self.widgets.setCurrentWidget(self.flash_main_widget)
     
     def test_menu(self):
+        """Switch to the flashcards testing menu"""
         self.flash_test_widget = Flash_Test()
         self.flash_test_widget.show()
 
     def disable_window(self):
+        """Disable main window (when popup created)"""
         pass
 
 
@@ -105,10 +111,12 @@ class Login(QWidget):
         acc = (self.user_line.text().lower(), self.pass_line.text())
         acc_con = create_con(acc_db)
         acc_cur = acc_con.cursor()
+        # check whether a username exists
         acc_cur.execute("select exists(select 1 "
                         "from accounts where username = ?)", [acc[0]])
         [exists_user] = acc_cur.fetchone()
 
+        # check if there is a username and password that matches together
         acc_cur.execute("select 1 from accounts where username = ?"
                         "and password = ?", acc)
         if not exists_user:
@@ -154,12 +162,15 @@ class Signup(QWidget):
         self.buttons_layout.addWidget(self.return_button)
 
     def signup_check(self):
+        """Check the username and password inputs to create an account"""
         acc = (self.user_line.text().lower(), self.pass_line.text())
         acc_con = create_con(acc_db)
         acc_cur = acc_con.cursor()
+        # check whether a username exists
         acc_cur.execute("select exists(select 1 "
                         "from accounts where username = ?)", [acc[0]])
         [exists_acc] = acc_cur.fetchone()
+
         if not 3 <= len(self.user_line.text()) <= 16:
             self.confirm_text.setText("Username must be between "
                                       "3 and 16 characters long")
@@ -168,6 +179,7 @@ class Signup(QWidget):
         elif not 8 <= len(self.pass_line.text()) <= 24:
             self.confirm_text.setText("Password must be between "
                                       "8 and 24 characters long")
+        # check for 1 of each capital, lowercase and digit for 8 characters
         elif not re.search("(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}",
                            self.pass_line.text()):
             self.confirm_text.setText("Password does not meet "
@@ -212,6 +224,17 @@ class Flash_Test(QWidget):
         self.title = QLabel("Testing")
         self.test_layout.addWidget(self.title)
 
+
+class Flash_Create(QWidget):
+    """A new window where the user can create flashcards"""
+    pass
+
+
+class Flash_Edit(QWidget):
+    """A new window where the user can edit their flashcards"""
+    pass
+
+
 acc_db = r"accounts.db"
 flash_db = r"flashcards.db"
 
@@ -226,12 +249,28 @@ flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
                      backside text NOT NULL);"""
 
 def insert_account(con, acc):
+    """
+    Insert the account into the accounts databases
+    -------
+    con: sqlite class
+        SQLite connection to a database 
+    acc: tuple
+        Account username and password
+    """
     sql = "INSERT INTO accounts(username, password) VALUES(?,?)"
     cur = con.cursor()
     cur.execute(sql, acc)
     con.commit()
 
 def create_table(con, tab):
+    """
+    Create a table in a database
+    -------
+    con: sqlite class
+        SQLite connection to a database
+    tab: str
+        SQLite table creation function
+    """
     try:
         cur = con.cursor()
         cur.execute(tab)
@@ -239,6 +278,15 @@ def create_table(con, tab):
         print(er)
 
 def create_con(db):
+    """
+    Create a connection to a database
+    -------
+    db: str
+        Filename and path of a database
+    -------
+    con: sqlite class
+        Connection to an existing SQLite database
+    """
     con = None
     try:
         con = sqlite3.connect(db)
@@ -248,7 +296,7 @@ def create_con(db):
     return con
 
 def main():
-    """Opens the main window and creates databases"""
+    """Opens the main window and creates databases if needed"""
     acc_con = create_con(acc_db)
     if acc_con is not None:
         create_table(acc_con, acc_table)
