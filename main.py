@@ -45,9 +45,19 @@ class Main(QMainWindow):
         self.widgets.setCurrentWidget(self.flash_main_widget)
     
     def test_menu(self):
-        """Switch to the flashcards testing menu"""
+        """Create the flashcard testing menu and disable main"""
         self.flash_test_widget = Flash_Test()
         self.flash_test_widget.show()
+
+    def create_menu(self):
+        """Create the flashcard creation menu and disable main"""
+        self.flash_create_widget = Flash_Create()
+        self.flash_create_widget.show()
+
+    def edit_menu(self):
+        """Create the flashcard edit menu and disable main"""
+        self.flash_edit_widget = Flash_Edit()
+        self.flash_edit_widget.show()
 
     def disable_window(self):
         """Disable main window (when popup created)"""
@@ -211,6 +221,7 @@ class Flash_Main(QWidget):
         self.flash_layout.addWidget(self.exit_button)
 
         self.test_button.clicked.connect(self.parent().test_menu)
+        self.create_button.clicked.connect(self.parent().create_menu)
         self.exit_button.clicked.connect(sys.exit)
 
 
@@ -218,8 +229,10 @@ class Flash_Test(QWidget):
     """A new window which tests the flashcards"""
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("FastCard Test")
         self.test_layout = QVBoxLayout()
         self.setLayout(self.test_layout)
+        self.setWindowModality(Qt.ApplicationModal)
         
         self.title = QLabel("Testing")
         self.test_layout.addWidget(self.title)
@@ -227,8 +240,40 @@ class Flash_Test(QWidget):
 
 class Flash_Create(QWidget):
     """A new window where the user can create flashcards"""
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("FastCard Create")
+        self.create_layout = QVBoxLayout()
+        self.setLayout(self.create_layout)
+        self.resize(400, 0)
+        self.setWindowModality(Qt.ApplicationModal)
 
+        self.title = QLabel("Create FastCards")
+        self.front_label = QLabel("FastCard Front")
+        self.front_input = QLineEdit()
+        self.front_input.setPlaceholderText("Front")
+        self.back_label = QLabel("FastCard Back")
+        self.back_input = QLineEdit()
+        self.back_input.setPlaceholderText("Back")
+        self.hint_label = QLabel("FastCard Hint")
+        self.hint_input = QLineEdit()
+        self.hint_input.setPlaceholderText("Hint")
+        self.create_card = QPushButton("Create FastCard")
+        self.back = QPushButton("Return")
+
+        self.create_layout.addWidget(self.title)
+        self.create_layout.addStretch()
+        self.create_layout.addWidget(self.front_label)
+        self.create_layout.addWidget(self.front_input)
+        self.create_layout.addWidget(self.back_label)
+        self.create_layout.addWidget(self.back_input)
+        self.create_layout.addWidget(self.hint_label)
+        self.create_layout.addWidget(self.hint_input)
+
+        self.buttons_layout = QHBoxLayout()
+        self.create_layout.addLayout(self.buttons_layout)
+        self.buttons_layout.addWidget(self.create_card)
+        self.buttons_layout.addWidget(self.back)
 
 class Flash_Edit(QWidget):
     """A new window where the user can edit their flashcards"""
@@ -246,7 +291,8 @@ acc_table = """CREATE TABLE IF NOT EXISTS accounts (
 flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
                      id integer PRIMARY KEY,
                      frontside text NOT NULL,
-                     backside text NOT NULL);"""
+                     backside text NOT NULL
+                     hint text);"""
 
 def insert_account(con, acc):
     """
@@ -274,8 +320,9 @@ def create_table(con, tab):
     try:
         cur = con.cursor()
         cur.execute(tab)
-    except Error as er:
-        print(er)
+        pass
+    except:
+        print("er")
 
 def create_con(db):
     """
@@ -298,13 +345,13 @@ def create_con(db):
 def main():
     """Opens the main window and creates databases if needed"""
     acc_con = create_con(acc_db)
-    if acc_con is not None:
+    if acc_con is not None: # will create account db if it doesnt exist
         create_table(acc_con, acc_table)
     else:
         print("Couldn't create acc connection")
 
     flash_con = create_con(flash_db)
-    if flash_con is not None:
+    if flash_con is not None: # will create flashcards db if it doesnt exist
         create_table(flash_con, flash_table)
     else:
         print("Couldn't create flash connection")
