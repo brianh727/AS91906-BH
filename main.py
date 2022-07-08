@@ -59,10 +59,6 @@ class Main(QMainWindow):
         self.flash_edit_widget = Flash_Edit()
         self.flash_edit_widget.show()
 
-    def disable_window(self):
-        """Disable main window (when popup created)"""
-        pass
-
 
 class Start(QWidget):
     """Start menu for the login buttons"""
@@ -225,9 +221,28 @@ class Flash_Main(QWidget):
         self.flash_layout.addWidget(self.create_button)
         self.flash_layout.addWidget(self.exit_button)
 
-        self.test_button.clicked.connect(self.parent().test_menu)
+        self.test_button.clicked.connect(self.flash_check)
         self.create_button.clicked.connect(self.parent().create_menu)
         self.exit_button.clicked.connect(sys.exit)
+    
+    def flash_check(self):
+        """
+        Check whether there are flashcards to be tested
+        Show warning if there aren't flashcards
+        Open flashcard testing menu if there are
+        """
+        flash_con = create_con(flash_db)
+        flash_cur = flash_con.cursor()
+        flash_cur.execute("SELECT frontside, backside FROM flashcards")
+        if not flash_cur.fetchall():
+            warning_popup = QMessageBox()
+            warning_popup.setIcon(QMessageBox.Warning)
+            warning_popup.setWindowTitle("No FastCards")
+            warning_popup.setText("There are no FastCards to test... \n"
+                                  "Please create some FastCards first.")
+            x = warning_popup.exec_()
+        else:
+            self.parent().parent().test_menu()
 
 
 class Flash_Test(QWidget):
@@ -237,10 +252,15 @@ class Flash_Test(QWidget):
         self.setWindowTitle("FastCard Test")
         self.test_layout = QVBoxLayout()
         self.setLayout(self.test_layout)
+        
         self.setWindowModality(Qt.ApplicationModal)
         
-        self.title = QLabel("Testing")
+        self.title = QLabel("Test FastCards")
         self.test_layout.addWidget(self.title)
+    
+    def create_flash_list():
+        flashcards = []
+
 
 
 class Flash_Create(QWidget):
