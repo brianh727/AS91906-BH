@@ -8,7 +8,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel,
                              QMainWindow, QVBoxLayout, QWidget,
                              QTabWidget, QTableWidget, QPushButton,
-                             QLineEdit, QStackedWidget)
+                             QLineEdit, QStackedWidget, QMessageBox)
 
 
 class Main(QMainWindow):
@@ -148,8 +148,13 @@ class Signup(QWidget):
         self.user_line = QLineEdit()
         self.user_line.setPlaceholderText("Username")
         self.pass_line = QLineEdit()
-        self.pass_line.setPlaceholderText("Password")
+        self.pass_line.setPlaceholderText("Password (*hover)")
         self.pass_line.setEchoMode(QLineEdit.Password)
+        self.pass_line.setToolTip("Password must be 8-24 characters long \n"
+                                  "And must contain \n"
+                                  " - atleast 1 capital letter \n"
+                                  " - atleast 1 lowercase letter \n"
+                                  " - atleast 1 number")
         self.pass_confirm_line = QLineEdit()
         self.pass_confirm_line.setPlaceholderText("Confirm Password")
         self.pass_confirm_line.setEchoMode(QLineEdit.Password)
@@ -243,37 +248,55 @@ class Flash_Create(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("FastCard Create")
-        self.create_layout = QVBoxLayout()
-        self.setLayout(self.create_layout)
+        create_layout = QVBoxLayout()
+        self.setLayout(create_layout)
         self.resize(400, 0)
         self.setWindowModality(Qt.ApplicationModal)
 
-        self.title = QLabel("Create FastCards")
-        self.front_label = QLabel("FastCard Front")
+        title = QLabel("Create FastCards")
+        front_label = QLabel("FastCard Front")
         self.front_input = QLineEdit()
         self.front_input.setPlaceholderText("Front")
-        self.back_label = QLabel("FastCard Back")
+        back_label = QLabel("FastCard Back")
         self.back_input = QLineEdit()
         self.back_input.setPlaceholderText("Back")
-        self.hint_label = QLabel("FastCard Hint")
-        self.hint_input = QLineEdit()
-        self.hint_input.setPlaceholderText("Hint")
-        self.create_card = QPushButton("Create FastCard")
-        self.back = QPushButton("Return")
+        hint_label = QLabel("FastCard Hint")
+        create_button = QPushButton("Create FastCard")
+        back_button = QPushButton("Return")
 
-        self.create_layout.addWidget(self.title)
-        self.create_layout.addStretch()
-        self.create_layout.addWidget(self.front_label)
-        self.create_layout.addWidget(self.front_input)
-        self.create_layout.addWidget(self.back_label)
-        self.create_layout.addWidget(self.back_input)
-        self.create_layout.addWidget(self.hint_label)
-        self.create_layout.addWidget(self.hint_input)
+        create_layout.addWidget(title)
+        create_layout.addStretch()
+        create_layout.addWidget(front_label)
+        create_layout.addWidget(self.front_input)
+        create_layout.addWidget(back_label)
+        create_layout.addWidget(self.back_input)
 
-        self.buttons_layout = QHBoxLayout()
-        self.create_layout.addLayout(self.buttons_layout)
-        self.buttons_layout.addWidget(self.create_card)
-        self.buttons_layout.addWidget(self.back)
+        buttons_layout = QHBoxLayout()
+        create_layout.addLayout(buttons_layout)
+        buttons_layout.addWidget(create_button)
+        buttons_layout.addWidget(back_button)
+        create_button.clicked.connect(self.create_card)
+        back_button.clicked.connect(self.close)
+    
+    def create_card(self):
+        """Create the flashcard with inputs providided"""
+        popup_box = QMessageBox()
+        popup_box.setWindowTitle("FastCard Confirmation")
+        popup_box.setIcon(QMessageBox.Information)
+        if not self.front_input.text():
+            popup_box.setText("Please input a front side for the FastCard")
+        elif not self.back_input.text():
+            popup_box.setText("Please input a back side for the FastCard")
+        else:
+            flashcard = (self.front_input.text(), self.back_input.text())
+            flash_con = create_con(flash_db)
+            insert_flashcard(flash_con, flashcard)
+
+            self.front_input.clear()
+            self.back_input.clear()
+            popup_box.setText("FastCard created")
+        x = popup_box.exec_()
+        
 
 class Flash_Edit(QWidget):
     """A new window where the user can edit their flashcards"""
@@ -291,21 +314,34 @@ acc_table = """CREATE TABLE IF NOT EXISTS accounts (
 flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
                      id integer PRIMARY KEY,
                      frontside text NOT NULL,
-                     backside text NOT NULL
-                     hint text);"""
+                     backside text NOT NULL);"""
 
 def insert_account(con, acc):
     """
-    Insert the account into the accounts databases
+    Insert the account into the accounts database
     -------
     con: sqlite class
-        SQLite connection to a database 
+        SQLite connection to account database 
     acc: tuple
         Account username and password
     """
-    sql = "INSERT INTO accounts(username, password) VALUES(?,?)"
+    sql = "INSERT INTO accounts(username, password) VALUES(?, ?)"
     cur = con.cursor()
     cur.execute(sql, acc)
+    con.commit()
+
+def insert_flashcard(con, flash):
+    """
+    Insert the flashcard into the accounts database
+    -------
+    con: sqlite class
+        SQLite connection to flashcard database
+    flash: tiple
+        Flashcard front and back
+    """
+    sql = "INSERT INTO flashcards(frontside, backside) VALUES(?, ?)"
+    cur = con.cursor()
+    cur.execute(sql, flash)
     con.commit()
 
 def create_table(con, tab):
