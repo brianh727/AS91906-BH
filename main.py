@@ -2,13 +2,15 @@ import sys
 import re
 import sqlite3
 import os.path
+import random
 
 from PyQt5.QtCore import Qt, QFile
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel,
                              QMainWindow, QVBoxLayout, QWidget,
                              QTabWidget, QTableWidget, QPushButton,
-                             QLineEdit, QStackedWidget, QMessageBox)
+                             QLineEdit, QStackedWidget, QMessageBox,
+                             QStackedLayout)
 
 
 class Main(QMainWindow):
@@ -250,17 +252,52 @@ class Flash_Test(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("FastCard Test")
-        self.test_layout = QVBoxLayout()
-        self.setLayout(self.test_layout)
-        
+        test_layout = QVBoxLayout()
+        self.setLayout(test_layout)
         self.setWindowModality(Qt.ApplicationModal)
-        
-        self.title = QLabel("Test FastCards")
-        self.test_layout.addWidget(self.title)
-    
-    def create_flash_list():
-        flashcards = []
+        flashcards = self.create_flash_list()
+        current_card = flashcards[0]
 
+        title = QLabel("Test FastCards")
+        front_label = QLabel("Frontside:")
+        self.flash_frontside = QLabel(current_card[0])
+        flash_separator = QLabel("---")
+        back_label = QLabel("Backside:")
+        self.flash_backside = QLabel("???")
+
+        show_button = QPushButton("Show Backside")
+        good_button = QPushButton("Know")
+        bad_button = QPushButton("Don't Know")
+        good_button.setToolTip("For if you knew the answer \n"
+                               "You will not be tested on this card again.")
+        bad_button.setToolTip("For if you didn't know the answer \n"
+                              "You will be retested on this card soon.") 
+
+        buttons_layout = QStackedLayout()
+        button_show_layout = QHBoxLayout()
+        button_check_layout = QHBoxLayout()
+        buttons_layout.addChildLayout(button_show_layout)
+        buttons_layout.addChildLayout(button_check_layout)
+        button_show_layout.addWidget(show_button)
+        button_check_layout.addWidget(good_button)
+        button_check_layout.addWidget(bad_button)
+        
+        test_layout.addWidget(title)
+        test_layout.addWidget(front_label)
+        test_layout.addWidget(self.flash_frontside)
+        test_layout.addWidget(flash_separator)
+        test_layout.addWidget(back_label)
+        test_layout.addWidget(self.flash_backside)
+        test_layout.addLayout(buttons_layout)
+    
+    def create_flash_list(self):
+        """Create a list of flashcards to be tested and randomise order"""
+        flash_con = create_con(flash_db)
+        flash_cur = flash_con.cursor()
+        flash_cur.execute("SELECT frontside, backside FROM flashcards")
+        flashcards = flash_cur.fetchall()
+        random.shuffle(flashcards)
+        return flashcards
 
 
 class Flash_Create(QWidget):
