@@ -255,32 +255,41 @@ class Flash_Test(QWidget):
         test_layout = QVBoxLayout()
         self.setLayout(test_layout)
         self.setWindowModality(Qt.ApplicationModal)
-        flashcards = self.create_flash_list()
-        current_card = flashcards[0]
+        self.flashcards = self.create_flash_list()
+        self.current_card = self.flashcards[0]
 
         title = QLabel("Test FastCards")
         front_label = QLabel("Frontside:")
-        self.flash_frontside = QLabel(current_card[0])
+        self.flash_frontside = QLabel(self.current_card[0])
         flash_separator = QLabel("---")
         back_label = QLabel("Backside:")
         self.flash_backside = QLabel("???")
 
         show_button = QPushButton("Show Backside")
+        show_button.clicked.connect(self.show_backside)
         good_button = QPushButton("Know")
+        good_button.clicked.connect(self.good_response)
         bad_button = QPushButton("Don't Know")
+        bad_button.clicked.connect(self.bad_response)
         good_button.setToolTip("For if you knew the answer \n"
                                "You will not be tested on this card again.")
         bad_button.setToolTip("For if you didn't know the answer \n"
                               "You will be retested on this card soon.") 
 
-        buttons_layout = QStackedLayout()
-        button_show_layout = QHBoxLayout()
-        button_check_layout = QHBoxLayout()
-        buttons_layout.addChildLayout(button_show_layout)
-        buttons_layout.addChildLayout(button_check_layout)
-        button_show_layout.addWidget(show_button)
-        button_check_layout.addWidget(good_button)
-        button_check_layout.addWidget(bad_button)
+        self.buttons_widget = QStackedWidget()
+        self.show_container = QWidget()
+        self.answer_container = QWidget()
+        show_layout = QHBoxLayout()
+        answer_layout = QHBoxLayout()
+        self.show_container.setLayout(show_layout)
+        self.answer_container.setLayout(answer_layout)
+        self.buttons_widget.addWidget(self.show_container)
+        self.buttons_widget.addWidget(self.answer_container)
+
+        show_layout.addWidget(show_button)
+        answer_layout.addWidget(good_button)
+        answer_layout.addWidget(bad_button)
+        self.buttons_widget.setCurrentWidget(self.show_container)
         
         test_layout.addWidget(title)
         test_layout.addWidget(front_label)
@@ -288,7 +297,7 @@ class Flash_Test(QWidget):
         test_layout.addWidget(flash_separator)
         test_layout.addWidget(back_label)
         test_layout.addWidget(self.flash_backside)
-        test_layout.addLayout(buttons_layout)
+        test_layout.addWidget(self.buttons_widget)
     
     def create_flash_list(self):
         """Create a list of flashcards to be tested and randomise order"""
@@ -298,6 +307,40 @@ class Flash_Test(QWidget):
         flashcards = flash_cur.fetchall()
         random.shuffle(flashcards)
         return flashcards
+
+    def show_backside(self):
+        """Show the backside of the current flashcard"""
+        self.flash_backside.setText(self.current_card[1])
+        self.buttons_widget.setCurrentWidget(self.answer_container)
+
+    def good_response(self):
+        """Remove the current card from the list and show next card"""
+        if len(self.flashcards) > 1:
+            self.flashcards.pop(0)
+            self.current_card = self.flashcards[0]
+            self.flash_frontside.setText(self.current_card[0])
+            self.flash_backside.setText("???")
+            self.buttons_widget.setCurrentWidget(self.show_container)
+        else:
+            popup = QMessageBox()
+            popup.setWindowTitle("FastCards Complete")
+            popup.setIcon(QMessageBox.Information)
+            popup.setText("You have finished testing yourself on your cards")
+            x = popup.exec_()
+            self.close()
+
+    def bad_response(self):
+        """Move the current card down the list and show next card"""
+        if len(self.flashcards) > 1:
+            new_position = random.randint(1, len(self.flashcards))
+            self.flashcards.insert(new_position, self.flashcards.pop(0))
+            self.current_card = self.flashcards[0]
+            self.flash_frontside.setText(self.current_card[0])
+            self.flash_backside.setText("???")
+            self.buttons_widget.setCurrentWidget(self.show_container)
+        else:
+            self.flash_backside.setText("???")
+            self.buttons_widget.setCurrentWidget(self.show_container)
 
 
 class Flash_Create(QWidget):
