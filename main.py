@@ -19,6 +19,7 @@ class Main(QMainWindow):
         """Initialize the settings of the main window"""
         super(Main, self).__init__(parent)
         self.setWindowTitle("FastCards")
+        self.setFixedSize(300, 200)
         self.widgets = QStackedWidget()
         self.start_widget = Start(self)
         self.widgets.addWidget(self.start_widget)
@@ -70,6 +71,7 @@ class Start(QWidget):
         self.setLayout(self.start_layout)
 
         self.title_label = QLabel("FastCards by Brian Huang")
+        self.title_label.setStyleSheet("font-weight: bold")
         self.login_button = QPushButton("Login")
         self.signup_button = QPushButton("Sign Up")
         self.guest_button = QPushButton("Guest Login")
@@ -95,6 +97,7 @@ class Login(QWidget):
         self.setLayout(self.login_layout)
 
         self.title = QLabel("Log into your account:")
+        self.title.setStyleSheet("font-weight: bold")
         self.user_line = QLineEdit()
         self.user_line.setPlaceholderText("Username")
         self.pass_line = QLineEdit()
@@ -146,6 +149,7 @@ class Signup(QWidget):
         self.setLayout(self.signup_layout)
 
         self.title = QLabel("Create a new account:")
+        self.title.setStyleSheet("font-weight: bold")
         self.user_line = QLineEdit()
         self.user_line.setPlaceholderText("Username")
         self.pass_line = QLineEdit()
@@ -214,7 +218,8 @@ class Flash_Main(QWidget):
         self.flash_layout = QVBoxLayout()
         self.setLayout(self.flash_layout)
         
-        self.title = QLabel("FastCards")
+        self.title = QLabel("FastCards Main Menu")
+        self.title.setStyleSheet("font-weight: bold")
         self.test_button = QPushButton("Test flashcards")
         self.edit_button = QPushButton("Edit flashcards")
         self.create_button = QPushButton("Create flashcards")
@@ -262,6 +267,7 @@ class Flash_Test(QWidget):
         self.current_card = self.flashcards[0]
 
         title = QLabel("Test FastCards")
+        title.setStyleSheet("font-weight: bold")
         front_label = QLabel("Frontside:")
         self.flash_frontside = QLabel(self.current_card[0])
         flash_separator = QLabel("---")
@@ -357,6 +363,7 @@ class Flash_Create(QWidget):
         self.setWindowModality(Qt.ApplicationModal)
 
         title = QLabel("Create FastCards")
+        title.setStyleSheet("font-weight: bold")
         front_label = QLabel("FastCard Front")
         self.front_input = QLineEdit()
         self.front_input.setPlaceholderText("Front")
