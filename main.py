@@ -73,15 +73,18 @@ class Start(QWidget):
         self.login_button = QPushButton("Login")
         self.signup_button = QPushButton("Sign Up")
         self.guest_button = QPushButton("Guest Login")
+        self.exit_button = QPushButton("Exit")
 
         self.start_layout.addWidget(self.title_label)
         self.start_layout.addWidget(self.login_button)
         self.start_layout.addWidget(self.signup_button)
         self.start_layout.addWidget(self.guest_button)
+        self.start_layout.addWidget(self.exit_button)
 
         self.login_button.clicked.connect(self.parent().login_menu)
         self.signup_button.clicked.connect(self.parent().signup_menu)
         self.guest_button.clicked.connect(self.parent().flash_menu)
+        self.exit_button.clicked.connect(sys.exit)
 
 
 class Login(QWidget):
