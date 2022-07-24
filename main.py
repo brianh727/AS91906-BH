@@ -47,7 +47,7 @@ class Main(QMainWindow):
         self.flash_main_widget = Flash_Main(self)
         self.widgets.addWidget(self.flash_main_widget)
         self.widgets.setCurrentWidget(self.flash_main_widget)
-    
+
     def test_menu(self):
         """Create the flashcard testing menu"""
         self.flash_test_widget = Flash_Test()
@@ -138,7 +138,7 @@ class Login(QWidget):
             self.error_message.setText("Username does not exist")
         elif not acc_cur.fetchone():
             self.error_message.setText("Password is incorrect")
-        else:            
+        else:
             self.parent().parent().flash_menu()
 
 
@@ -218,7 +218,7 @@ class Flash_Main(QWidget):
         super(Flash_Main, self).__init__(parent)
         self.flash_layout = QVBoxLayout()
         self.setLayout(self.flash_layout)
-        
+
         self.title = QLabel("FastCards Main Menu")
         self.title.setStyleSheet("font-weight: bold")
         self.test_button = QPushButton("Test flashcards")
@@ -236,7 +236,7 @@ class Flash_Main(QWidget):
         self.remove_button.clicked.connect(self.parent().remove_menu)
         self.create_button.clicked.connect(self.parent().create_menu)
         self.exit_button.clicked.connect(sys.exit)
-    
+
     def flash_check(self):
         """
         Check whether there are flashcards to be tested
@@ -286,7 +286,7 @@ class Flash_Test(QWidget):
         good_button.setToolTip("For if you knew the answer \n"
                                "You will not be tested on this card again.")
         bad_button.setToolTip("For if you didn't know the answer \n"
-                              "You will be retested on this card soon.") 
+                              "You will be retested on this card soon.")
 
         self.buttons_widget = QStackedWidget()
         self.show_container = QWidget()
@@ -302,7 +302,7 @@ class Flash_Test(QWidget):
         answer_layout.addWidget(good_button)
         answer_layout.addWidget(bad_button)
         self.buttons_widget.setCurrentWidget(self.show_container)
-        
+
         test_layout.addWidget(title)
         test_layout.addWidget(front_label)
         test_layout.addWidget(self.flash_frontside)
@@ -310,7 +310,7 @@ class Flash_Test(QWidget):
         test_layout.addWidget(back_label)
         test_layout.addWidget(self.flash_backside)
         test_layout.addWidget(self.buttons_widget)
-    
+
     def create_flash_list(self):
         """Create a list of flashcards to be tested and randomise order"""
         flash_con = create_con(flash_db)
@@ -327,6 +327,7 @@ class Flash_Test(QWidget):
 
     def good_response(self):
         """Remove the current card from the list and show next card"""
+        # Will completely remove current card from test
         if len(self.flashcards) > 1:
             self.flashcards.pop(0)
             self.current_card = self.flashcards[0]
@@ -342,15 +343,19 @@ class Flash_Test(QWidget):
             self.close()
 
     def bad_response(self):
-        """Move the current card down the list and show next card"""
+        """
+        Move the current card down the list and show next card
+        Repeat current card if there aren't any other ones available
+        """
         if len(self.flashcards) > 1:
+            # New position of card is random from next to end
             new_position = random.randint(1, len(self.flashcards))
             self.flashcards.insert(new_position, self.flashcards.pop(0))
             self.current_card = self.flashcards[0]
             self.flash_frontside.setText(self.current_card[0])
             self.flash_backside.setText("???")
             self.buttons_widget.setCurrentWidget(self.show_container)
-        else:
+        else:  # Repeat current card if there are no other
             self.flash_backside.setText("???")
             self.buttons_widget.setCurrentWidget(self.show_container)
 
@@ -390,9 +395,12 @@ class Flash_Create(QWidget):
         buttons_layout.addWidget(back_button)
         create_button.clicked.connect(self.create_card)
         back_button.clicked.connect(self.close)
-    
+
     def create_card(self):
-        """Create the flashcard with inputs providided"""
+        """
+        Create the flashcard with inputs providided
+        Remove current inputs to make space for next flashcard
+        """
         popup_box = QMessageBox()
         popup_box.setWindowTitle("FastCard Confirmation")
         popup_box.setIcon(QMessageBox.Information)
@@ -404,12 +412,12 @@ class Flash_Create(QWidget):
             flashcard = (self.front_input.text(), self.back_input.text())
             flash_con = create_con(flash_db)
             insert_flashcard(flash_con, flashcard)
-
+            # Remove the current inputs to make space for next
             self.front_input.clear()
             self.back_input.clear()
             popup_box.setText("FastCard created")
         x = popup_box.exec_()
-        
+
 
 class Flash_Remove(QWidget):
     """A new window where the user can remove their flashcards"""
@@ -420,7 +428,7 @@ class Flash_Remove(QWidget):
         self.setLayout(remove_layout)
         self.setFixedSize(400, 250)
         self.setWindowModality(Qt.ApplicationModal)
-    
+
         flash_con = create_con(flash_db)
         flash_cur = flash_con.cursor()
         flash_cur.execute("SELECT frontside, backside FROM flashcards")
@@ -432,31 +440,35 @@ class Flash_Remove(QWidget):
         remove_button = QPushButton("Remove FastCard")
         remove_button.clicked.connect(self.remove_card)
 
+        # Set interaction options of table
         self.cards_table.horizontalHeader().setVisible(False)
         self.cards_table.verticalHeader().setVisible(False)
         self.cards_table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.cards_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.cards_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
         self.cards_table.selectRow(0)
         self.cards_header = self.cards_table.horizontalHeader()
         self.cards_header.setSectionResizeMode(0, QHeaderView.Stretch)
+        # fills table with all flashcard frontsides
         for row, card in enumerate(flashcards):
             self.cards_table.setItem(row, 0, QTableWidgetItem(card[0]))
 
         remove_layout.addWidget(title)
         remove_layout.addWidget(self.cards_table)
         remove_layout.addWidget(remove_button)
-    
+
     def remove_card(self):
         """Remove selected card in the cards table"""
         row = self.cards_table.currentRow()
         popup = QMessageBox()
-        if row >= 0:
+        if row >= 0:  # Check if there are any rows left
             selected_card = self.cards_table.item(row, 0).text()
             flash_con = create_con(flash_db)
             flash_cur = flash_con.cursor()
-            flash_cur.execute("DELETE FROM flashcards WHERE frontside = ?", [selected_card])
-            flash_con.commit()
+            flash_cur.execute("DELETE FROM flashcards WHERE frontside = ?",
+                              [selected_card])
+            flash_con.commit()  # Commit the removal of the card
             self.cards_table.removeRow(row)
             popup.setWindowTitle("FastCard Removed")
             popup.setIcon(QMessageBox.Information)
@@ -466,7 +478,6 @@ class Flash_Remove(QWidget):
             popup.setIcon(QMessageBox.Warning)
             popup.setText("Please select a FastCard")
         x = popup.exec_()
-            
 
 
 acc_db = r"accounts.db"
@@ -482,12 +493,13 @@ flash_table = """CREATE TABLE IF NOT EXISTS flashcards (
                      frontside text NOT NULL,
                      backside text NOT NULL);"""
 
+
 def insert_account(con, acc):
     """
     Insert the account into the accounts database
     -------
     con: sqlite class
-        SQLite connection to account database 
+        SQLite connection to account database
     acc: tuple
         Account username and password
     """
@@ -495,6 +507,7 @@ def insert_account(con, acc):
     cur = con.cursor()
     cur.execute(sql, acc)
     con.commit()
+
 
 def insert_flashcard(con, flash):
     """
@@ -509,6 +522,7 @@ def insert_flashcard(con, flash):
     cur = con.cursor()
     cur.execute(sql, flash)
     con.commit()
+
 
 def create_table(con, tab):
     """
@@ -525,6 +539,7 @@ def create_table(con, tab):
         pass
     except:
         print("er")
+
 
 def create_con(db):
     """
@@ -544,20 +559,22 @@ def create_con(db):
         print(er)
     return con
 
+
 def main():
     """Opens the main window and creates databases if needed"""
     acc_con = create_con(acc_db)
-    if acc_con is not None: # will create account db if it doesnt exist
+    if acc_con is not None:  # will create account db if it doesnt exist
         create_table(acc_con, acc_table)
     else:
         print("Couldn't create acc connection")
 
     flash_con = create_con(flash_db)
-    if flash_con is not None: # will create flashcards db if it doesnt exist
+    if flash_con is not None:  # will create flashcards db if it doesnt exist
         create_table(flash_con, flash_table)
     else:
         print("Couldn't create flash connection")
 
+    # Start the GUI up
     application = QApplication(sys.argv)
     window = Main()
     window.show()
