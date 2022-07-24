@@ -263,6 +263,7 @@ class Flash_Test(QWidget):
         super().__init__()
         self.setWindowTitle("FastCard Test")
         test_layout = QVBoxLayout()
+        self.setFixedSize(400, 0)
         self.setLayout(test_layout)
         self.setWindowModality(Qt.ApplicationModal)
         self.flashcards = self.create_flash_list()
@@ -361,7 +362,7 @@ class Flash_Create(QWidget):
         self.setWindowTitle("FastCard Create")
         create_layout = QVBoxLayout()
         self.setLayout(create_layout)
-        self.resize(400, 0)
+        self.setFixedSize(400, 0)
         self.setWindowModality(Qt.ApplicationModal)
 
         title = QLabel("Create FastCards")
@@ -417,7 +418,7 @@ class Flash_Remove(QWidget):
         self.setWindowTitle("FastCards Remove")
         remove_layout = QVBoxLayout()
         self.setLayout(remove_layout)
-        self.resize(400, 0)
+        self.setFixedSize(400, 250)
         self.setWindowModality(Qt.ApplicationModal)
     
         flash_con = create_con(flash_db)
@@ -427,17 +428,45 @@ class Flash_Remove(QWidget):
 
         title = QLabel("Remove FastCards")
         title.setStyleSheet("font-weight: bold")
-        cards_table = QTableWidget(len(flashcards), 1)
-        cards_table.horizontalHeader().setVisible(False)
-        cards_table.verticalHeader().setVisible(False)
-        cards_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        cards_header = cards_table.horizontalHeader()
-        cards_header.setSectionResizeMode(0, QHeaderView.Stretch)
+        self.cards_table = QTableWidget(len(flashcards), 1)
+        remove_button = QPushButton("Remove FastCard")
+        remove_button.clicked.connect(self.remove_card)
+
+        self.cards_table.horizontalHeader().setVisible(False)
+        self.cards_table.verticalHeader().setVisible(False)
+        self.cards_table.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.cards_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.cards_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.cards_table.selectRow(0)
+        self.cards_header = self.cards_table.horizontalHeader()
+        self.cards_header.setSectionResizeMode(0, QHeaderView.Stretch)
         for row, card in enumerate(flashcards):
-            cards_table.setItem(row, 0, QTableWidgetItem(card[0]))
+            self.cards_table.setItem(row, 0, QTableWidgetItem(card[0]))
 
         remove_layout.addWidget(title)
-        remove_layout.addWidget(cards_table)
+        remove_layout.addWidget(self.cards_table)
+        remove_layout.addWidget(remove_button)
+    
+    def remove_card(self):
+        """Remove selected card in the cards table"""
+        row = self.cards_table.currentRow()
+        popup = QMessageBox()
+        if row >= 0:
+            selected_card = self.cards_table.item(row, 0).text()
+            flash_con = create_con(flash_db)
+            flash_cur = flash_con.cursor()
+            flash_cur.execute("DELETE FROM flashcards WHERE frontside = ?", [selected_card])
+            flash_con.commit()
+            self.cards_table.removeRow(row)
+            popup.setWindowTitle("FastCard Removed")
+            popup.setIcon(QMessageBox.Information)
+            popup.setText("FastCard sucessfully removed")
+        else:
+            popup.setWindowTitle("No FastCard Selected")
+            popup.setIcon(QMessageBox.Warning)
+            popup.setText("Please select a FastCard")
+        x = popup.exec_()
+            
 
 
 acc_db = r"accounts.db"
