@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QLabel,
                              QMainWindow, QVBoxLayout, QWidget,
                              QTabWidget, QTableWidget, QPushButton,
                              QLineEdit, QStackedWidget, QMessageBox,
-                             QStackedLayout)
+                             QStackedLayout, QTableWidgetItem, QHeaderView,
+                             QAbstractItemView)
 
 
 class Main(QMainWindow):
@@ -48,19 +49,19 @@ class Main(QMainWindow):
         self.widgets.setCurrentWidget(self.flash_main_widget)
     
     def test_menu(self):
-        """Create the flashcard testing menu and disable main"""
+        """Create the flashcard testing menu"""
         self.flash_test_widget = Flash_Test()
         self.flash_test_widget.show()
 
     def create_menu(self):
-        """Create the flashcard creation menu and disable main"""
+        """Create the flashcard creation menu"""
         self.flash_create_widget = Flash_Create()
         self.flash_create_widget.show()
 
-    def edit_menu(self):
-        """Create the flashcard edit menu and disable main"""
-        self.flash_edit_widget = Flash_Edit()
-        self.flash_edit_widget.show()
+    def remove_menu(self):
+        """Create the flashcard removal menu"""
+        self.flash_remove_widget = Flash_Remove()
+        self.flash_remove_widget.show()
 
 
 class Start(QWidget):
@@ -221,17 +222,18 @@ class Flash_Main(QWidget):
         self.title = QLabel("FastCards Main Menu")
         self.title.setStyleSheet("font-weight: bold")
         self.test_button = QPushButton("Test flashcards")
-        self.edit_button = QPushButton("Edit flashcards")
+        self.remove_button = QPushButton("Remove flashcards")
         self.create_button = QPushButton("Create flashcards")
         self.exit_button = QPushButton("Sign out and exit")
 
         self.flash_layout.addWidget(self.title)
         self.flash_layout.addWidget(self.test_button)
-        self.flash_layout.addWidget(self.edit_button)
+        self.flash_layout.addWidget(self.remove_button)
         self.flash_layout.addWidget(self.create_button)
         self.flash_layout.addWidget(self.exit_button)
 
         self.test_button.clicked.connect(self.flash_check)
+        self.remove_button.clicked.connect(self.parent().remove_menu)
         self.create_button.clicked.connect(self.parent().create_menu)
         self.exit_button.clicked.connect(sys.exit)
     
@@ -408,9 +410,34 @@ class Flash_Create(QWidget):
         x = popup_box.exec_()
         
 
-class Flash_Edit(QWidget):
-    """A new window where the user can edit their flashcards"""
-    pass
+class Flash_Remove(QWidget):
+    """A new window where the user can remove their flashcards"""
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("FastCards Remove")
+        remove_layout = QVBoxLayout()
+        self.setLayout(remove_layout)
+        self.resize(400, 0)
+        self.setWindowModality(Qt.ApplicationModal)
+    
+        flash_con = create_con(flash_db)
+        flash_cur = flash_con.cursor()
+        flash_cur.execute("SELECT frontside, backside FROM flashcards")
+        flashcards = flash_cur.fetchall()
+
+        title = QLabel("Remove FastCards")
+        title.setStyleSheet("font-weight: bold")
+        cards_table = QTableWidget(len(flashcards), 1)
+        cards_table.horizontalHeader().setVisible(False)
+        cards_table.verticalHeader().setVisible(False)
+        cards_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        cards_header = cards_table.horizontalHeader()
+        cards_header.setSectionResizeMode(0, QHeaderView.Stretch)
+        for row, card in enumerate(flashcards):
+            cards_table.setItem(row, 0, QTableWidgetItem(card[0]))
+
+        remove_layout.addWidget(title)
+        remove_layout.addWidget(cards_table)
 
 
 acc_db = r"accounts.db"
