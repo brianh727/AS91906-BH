@@ -246,7 +246,7 @@ class Flash_Main(QWidget):
         flash_con = create_con(flash_db)
         flash_cur = flash_con.cursor()
         flash_cur.execute("SELECT frontside, backside FROM flashcards")
-        if not flash_cur.fetchall():
+        if not flash_cur.fetchall():  # create a popup if there are no cards
             warning_popup = QMessageBox()
             warning_popup.setIcon(QMessageBox.Warning)
             warning_popup.setWindowTitle("No FastCards")
@@ -258,7 +258,10 @@ class Flash_Main(QWidget):
 
 
 class Flash_Test(QWidget):
-    """A new window which tests the flashcards"""
+    """
+    A new window which tests the flashcards
+    A new set of flashcards will be created from the database every time
+    """
     def __init__(self):
         super().__init__()
         self.setWindowTitle("FastCard Test")
@@ -312,7 +315,10 @@ class Flash_Test(QWidget):
         test_layout.addWidget(self.buttons_widget)
 
     def create_flash_list(self):
-        """Create a list of flashcards to be tested and randomise order"""
+        """
+        Create a list of flashcards to be tested and randomise order
+        List will be created with flashcards in flashcard database
+        """
         flash_con = create_con(flash_db)
         flash_cur = flash_con.cursor()
         flash_cur.execute("SELECT frontside, backside FROM flashcards")
@@ -326,8 +332,11 @@ class Flash_Test(QWidget):
         self.buttons_widget.setCurrentWidget(self.answer_container)
 
     def good_response(self):
-        """Remove the current card from the list and show next card"""
-        # Will completely remove current card from test
+        """
+        Remove the current card from the list and show next card
+        Card will not be tested again in the testing session
+        """
+        # will completely remove current card from test
         if len(self.flashcards) > 1:
             self.flashcards.pop(0)
             self.current_card = self.flashcards[0]
@@ -348,14 +357,14 @@ class Flash_Test(QWidget):
         Repeat current card if there aren't any other ones available
         """
         if len(self.flashcards) > 1:
-            # New position of card is random from next to end
+            # new position of card is random from next to end
             new_position = random.randint(1, len(self.flashcards))
             self.flashcards.insert(new_position, self.flashcards.pop(0))
             self.current_card = self.flashcards[0]
             self.flash_frontside.setText(self.current_card[0])
             self.flash_backside.setText("???")
             self.buttons_widget.setCurrentWidget(self.show_container)
-        else:  # Repeat current card if there are no other
+        else:  # repeat current card if there are no other
             self.flash_backside.setText("???")
             self.buttons_widget.setCurrentWidget(self.show_container)
 
@@ -429,6 +438,7 @@ class Flash_Remove(QWidget):
         self.setFixedSize(400, 250)
         self.setWindowModality(Qt.ApplicationModal)
 
+        # create list of flashcards from database to be put into table
         flash_con = create_con(flash_db)
         flash_cur = flash_con.cursor()
         flash_cur.execute("SELECT frontside, backside FROM flashcards")
@@ -440,9 +450,10 @@ class Flash_Remove(QWidget):
         remove_button = QPushButton("Remove FastCard")
         remove_button.clicked.connect(self.remove_card)
 
-        # Set interaction options of table
+        # remove visible headers from table
         self.cards_table.horizontalHeader().setVisible(False)
         self.cards_table.verticalHeader().setVisible(False)
+        # set interaction options of table
         self.cards_table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.cards_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.cards_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -462,18 +473,19 @@ class Flash_Remove(QWidget):
         """Remove selected card in the cards table"""
         row = self.cards_table.currentRow()
         popup = QMessageBox()
-        if row >= 0:  # Check if there are any rows left
+        if row >= 0:  # check if there are any rows left
             selected_card = self.cards_table.item(row, 0).text()
             flash_con = create_con(flash_db)
             flash_cur = flash_con.cursor()
             flash_cur.execute("DELETE FROM flashcards WHERE frontside = ?",
                               [selected_card])
-            flash_con.commit()  # Commit the removal of the card
+            flash_con.commit()  # commit the removal of the card
+            # is necessary, would not remove without it
             self.cards_table.removeRow(row)
             popup.setWindowTitle("FastCard Removed")
             popup.setIcon(QMessageBox.Information)
             popup.setText("FastCard sucessfully removed")
-        else:
+        else:  # changes info on popup if there are no flashcards selected
             popup.setWindowTitle("No FastCard Selected")
             popup.setIcon(QMessageBox.Warning)
             popup.setText("Please select a FastCard")
